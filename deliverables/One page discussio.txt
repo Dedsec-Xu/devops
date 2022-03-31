@@ -1,0 +1,8 @@
+1. How Jenkins plugins helps DevOps practices?
+
+Jenkins plugins have a lot of different functions. For example, there is a plugin that can deploy onto AWS. BlueOcean is a plugin that can better visualize pipeline. Docker plugin can let Jenkins automatically create docker container for testing and deployment. In summary, I think jenkins plugins allow more automation possibilities for different actions in development. For example AWS deployment can be automated with plugins. Docker creation can be automated. For this reason, the plugins can be very helpful for DevOps practices.
+
+
+2. What are the alternative ways of installing plugins on Jenkins?
+
+The plugin installation and configuration can also be automated as a code. You can use plugin manager CLI with docker. Firstly declare all the plugins in a plugins.txt. Then in the docker file, pass the plugins.txt to jenkins-plugin-cli. So when the docker is up.  jenkins-plugin-cli will automatically install the pre-declared plugins.
