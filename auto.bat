@@ -1,12 +1,12 @@
 E:
 cd E:\VirtualBox\vagrant\
-mkdir hw1-13
-cd hw1-13
+mkdir hw1-14
+cd hw1-14
 
 mkdir vagrant
 cd vagrant
 
-vagrant init assignment1
+vagrant init
 
 powershell curl -o "Vagrantfile" "https://raw.githubusercontent.com/Dedsec-Xu/devops/main/current/Vagrantfile"
 powershell curl -o "mem.sh" "https://raw.githubusercontent.com/Dedsec-Xu/devops/main/current/mem.sh"
