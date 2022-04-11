@@ -1,31 +1,28 @@
-E:
-cd E:\VirtualBox\vagrant\
-mkdir hw22
-cd hw22
+sysctl -w vm.max_map_count=262144 
+echo "vm.max_map_count=262144" >> /etc/sysctl.conf
+sysctl -w fs.file-max=131072
+echo "fs.file-max=131072" >> /etc/sysctl.conf
+ulimit -n 65536
+ulimit -u 4096
+
+sudo apt-get update
+sudo apt-get upgrade
+sudo apt-get install wget unzip -y
+
+sudo apt-get install openjdk-11-jdk -y
+sudo apt-get install openjdk-11-jre -y
+
+sudo apt-get update
+
+sudo apt-get install -y python3-pip
+sudo pip install ansible
 
 
-mkdir ansible
-cd ansible
-vagrant init
+sudo cp ./ansible.cfg /etc/ansible/ansible.cfg
+sudo cp ./hosts /etc/ansible/hosts
 
-powershell curl -o "Vagrantfile" "https://raw.githubusercontent.com/Dedsec-Xu/devops/main/hw2/ansible/Vagrantfile"
-powershell curl -o "provision.sh" "https://github.com/Dedsec-Xu/devops/blob/main/hw2/ansible/provision.sh"
+sudo apt install net-tools
 
-
-mkdir vagrant
-cd vagrant
-
-vagrant init
-
-powershell curl -o "Vagrantfile" "https://raw.githubusercontent.com/Dedsec-Xu/devops/main/hw2/vagrant/Vagrantfile"
-powershell curl -o "provision.sh" "https://raw.githubusercontent.com/Dedsec-Xu/devops/main/hw2/vagrant/provision.sh"
-powershell curl -o "docker-compose.yml" "https://raw.githubusercontent.com/Dedsec-Xu/devops/main/hw2/vagrant/docker-compose.yml"
-powershell curl -o "ansible.cfg" "https://raw.githubusercontent.com/Dedsec-Xu/devops/main/hw2/vagrant/ansible.cfg"
-powershell curl -o "hosts" "https://raw.githubusercontent.com/ansible/ansible/devel/examples/hosts"
-powershell curl -o "petclinic.jar" "https://raw.githubusercontent.com/ansible/ansible/devel/examples/petclinic.jar"
-
-vagrant up
-
-
+sudo sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/g' /etc/ssh/sshd_config; sudo systemctl restart sshd;
 
 
