@@ -11,7 +11,10 @@ vagrant init
 powershell curl -o "Vagrantfile" "https://raw.githubusercontent.com/Dedsec-Xu/devops/main/hw2/ansible/Vagrantfile"
 powershell curl -o "provision.sh" "https://github.com/Dedsec-Xu/devops/blob/main/hw2/ansible/provision.sh"
 
+vagrant up
 
+
+cd E:\VirtualBox\vagrant\
 mkdir vagrant
 cd vagrant
 
