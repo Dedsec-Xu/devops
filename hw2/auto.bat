@@ -14,7 +14,7 @@ powershell curl -o "provision.sh" "https://github.com/Dedsec-Xu/devops/blob/main
 vagrant up
 
 
-cd E:\VirtualBox\vagrant\
+cd ..
 mkdir vagrant
 cd vagrant
 
@@ -24,8 +24,8 @@ powershell curl -o "Vagrantfile" "https://raw.githubusercontent.com/Dedsec-Xu/de
 powershell curl -o "provision.sh" "https://raw.githubusercontent.com/Dedsec-Xu/devops/main/hw2/vagrant/provision.sh"
 powershell curl -o "docker-compose.yml" "https://raw.githubusercontent.com/Dedsec-Xu/devops/main/hw2/vagrant/docker-compose.yml"
 powershell curl -o "ansible.cfg" "https://raw.githubusercontent.com/Dedsec-Xu/devops/main/hw2/vagrant/ansible.cfg"
-powershell curl -o "hosts" "https://raw.githubusercontent.com/ansible/ansible/devel/examples/hosts"
-powershell curl -o "petclinic.jar" "https://raw.githubusercontent.com/ansible/ansible/devel/examples/petclinic.jar"
+powershell curl -o "hosts" "https://raw.githubusercontent.com/Dedsec-Xu/devops/main/hw2/vagrant/hosts"
+powershell curl -o "petclinic.jar" "https://raw.githubusercontent.com/Dedsec-Xu/devops/main/hw2/vagrant/petclinic.jar"
 
 vagrant up
 
