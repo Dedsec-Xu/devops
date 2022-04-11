@@ -1,0 +1,11 @@
+---
+- hosts: test
+  remote_user: vagrant
+  tasks:
+    - name: Send jar to web-server
+      copy:
+       src: /vagrant/petclinic.jar
+       dest: /vagrant
+       mode: 0755
+    - name: deploy
+      shell: "nohup java -jar /vagrant/petclinic.jar"
