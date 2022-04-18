@@ -1,0 +1,4 @@
+Based on my research. Puppet is written with Ruby and have a higher market share. Ansible is developed using python.
+One main difference I discovered is that Puppet follows an agent-master architecture. You need to install Puppet Server on deployment server and install Puppet Agent on all the nodes you want to deploy. Ansible has a master program but no agents running on the client machines. This is a pro for ansible.
+
+However, this agentless feature also has some downsides. Puppet support some functions that can only be accomplished with an agent. Another advantage of puppet is that it is out earlier so it have more plugins and community support.
