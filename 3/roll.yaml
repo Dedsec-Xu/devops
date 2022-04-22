@@ -6,15 +6,15 @@ spec:
   replicas: 1
   strategy:
     canary:
-      canaryService: rollouts-demo-canary1
-      stableService: rollouts-demo-stable1
+      canaryService: rollouts-demo-canary
+      stableService: rollouts-demo-stable
       trafficRouting:
         istio:
           virtualServices:
-          - name: rollouts-demo-vsvc3 # At least one virtualService is required
+          - name: rollouts-demo-vsvc1 # At least one virtualService is required
             routes:
             - primary # At least one route is required
-          - name: rollouts-demo-vsvc4
+          - name: rollouts-demo-vsvc2
             routes:
             - secondary # At least one route is required
       steps:
@@ -27,11 +27,11 @@ spec:
   template:
     metadata:
       labels:
-        app: rollouts-demo3
+        app: rollouts-demo
         istio-injection: enabled
     spec:
       containers:
-      - name: rollouts-demo3
+      - name: rollouts-demo
         image: argoproj/rollouts-demo:blue
         ports:
         - name: http
