@@ -24,7 +24,7 @@ spec:
   - match:
     - port: 3000
       sniHosts:
-      - localhost
+      - reviews.bookinfo.com
     route:
     - destination:
         host: rollouts-demo-stable
@@ -60,7 +60,7 @@ spec:
   - match:
     - port: 3000
       sniHosts:
-      - localhost
+      - reviews.bookinfo.com
     route:
     - destination:
         host: rollouts-demo-stable
@@ -68,3 +68,4 @@ spec:
     - destination:
         host: rollouts-demo-canary
       weight: 0
+      
