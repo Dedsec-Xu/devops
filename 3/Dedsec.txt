@@ -1,0 +1,4 @@
+kubectl apply -f https://raw.githubusercontent.com/Dedsec-Xu/devops/main/3/gate.yaml
+kubectl apply -f https://raw.githubusercontent.com/Dedsec-Xu/devops/main/3/istio.yaml
+kubectl apply -f https://raw.githubusercontent.com/Dedsec-Xu/devops/main/3/roll.yaml
+kubectl apply -f https://raw.githubusercontent.com/Dedsec-Xu/devops/main/3/ser.yaml

@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Rollout
 metadata:
-  name: rollouts-demo
+  name: rollouts-demo3
 spec:
   replicas: 1
   strategy:
@@ -41,4 +41,3 @@ spec:
           requests:
             memory: 32Mi
             cpu: 5m
-            
