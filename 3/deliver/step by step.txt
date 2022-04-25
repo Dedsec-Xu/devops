@@ -51,7 +51,7 @@ I used curl to verify that 25% of the traffic is toward canary pod and the 75% i
 
 Kubectl-argo-rollouts get rollout rollouts-demo –watch
 
-To visualize the result, but I ran into this bug(bug.png) and I spent 14 hours on it and could not fix it. So, I gave up. This looks like the bug mentioned in
+To visualize the result, but I ran into this bug(bug.png) and I can no longer open the UI as well. I spent 14 hours on it and could not fix it. So, I gave up. This looks like the bug mentioned in
 https://github.com/kyverno/kyverno/issues/2069 but it is not fixed. So I dont know what to do about it.
 
 

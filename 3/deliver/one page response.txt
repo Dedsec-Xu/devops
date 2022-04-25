@@ -1,0 +1,1 @@
+Argo CD, based on its name, is a Continuous deployment tool. It provides a way to use a declarative way to deploy application like GitOps. It also support automated, reliable, and fast Application deployment.
