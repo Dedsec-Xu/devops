@@ -1,0 +1,41 @@
+The most difficult problem I encountered in this lab is that the csv output module lacks documentation and example. On the official documentation of csv output module page, there's only 3 examples and none of them is what I need. Most people seems to want to input csv file instead of output csv file. So there are a lot of examples of using csv input module and ES output module. But zero example of using csv output module. 
+
+The problem is I can not figure out how to output the host name and path field
+
+
+This is the parsed log. In csv output module. I can't find a way to out put log.file.path to the first column.
+
+
+{ "host":
+  {
+    "name":"ansible"
+  }
+
+  ,"message":"2022-05-01 08:54:57.355  INFO 22293 --- [extShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown completed."
+
+  ,"log":
+  {
+    "file":
+    {
+      "path":"/vagrant/nohup.out"
+    }
+  }
+  ,"@version":"1"
+  ,"event":
+  {
+    "original":"2022-05-01 08:54:57.355  INFO 22293 --- [extShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown completed."
+  }
+  ,"@timestamp":"2022-05-01T15:22:09.750123Z"
+  ,"type":"apache"
+}
+
+Finally, I realized I can use file out put module instead. So I used codec in the file output module to achieve csv format as follows:
+
+output {
+    file {
+        codec => line { format => "%{[log][file][path]},%{@version},%{message},%{@timestamp},%{[host][name]}"}
+        path => "/vagrant/petcliniclog.csv"
+    }
+}
+
+And I can finally get a normal output. Instead of tons of json strings.
