@@ -1,0 +1,187 @@
+1. To finish this assignment. I firstly modified the play.yml from lab 2 to output log to a specific file by changing the deployment step to:
+
+    - name: deploy
+      shell: "nohup java -jar /vagrant/petclinic.jar > /vagrant/petclinic.log 2>&1 &"
+
+
+The modified play.yml :
+
+---
+- hosts: test
+  remote_user: vagrant
+  tasks:
+    - name: Send jar to web-server
+      copy:
+       src: /vagrant/petclinic.jar
+       dest: /vagrant
+       mode: 0755
+    - name: deploy
+      shell: "nohup java -jar /vagrant/petclinic.jar > /vagrant/petclinic.log 2>&1 &"
+
+
+
+2. Now, if we run the playbook from the host, the log file will be generated at /vagrant/petclinic.log on the webserver.
+
+3. I then added two steps on the provisioning script on the webserver machine.
+
+I added these 4 lines. They are from the offcial guide on installing logstash. These lines will install logstash on the webserver. 
+
+
+wget -qO - https://artifacts.elastic.co/GPG-KEY-elasticsearch | sudo apt-key add -
+sudo apt-get install apt-transport-https
+echo "deb https://artifacts.elastic.co/packages/8.x/apt stable main" | sudo tee -a /etc/apt/sources.list.d/elastic-8.x.list
+sudo apt-get update && sudo apt-get install logstash
+
+Then I added this line
+
+
+sudo nohup sudo /usr/share/logstash/bin/logstash -f /vagrant/1.conf > /vagrant/logstash.log 2>&1 &
+
+This line will run a logstash program in the background which will work based on the instructions given in /vagrant/1.conf
+
+
+
+The modified provision.sh:
+
+sudo apt-get update
+sudo apt-get upgrade
+sudo apt-get install wget unzip -y
+
+sudo apt-get install openjdk-11-jdk -y
+sudo apt-get install openjdk-11-jre -y
+
+sudo sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/g' /etc/ssh/sshd_config; sudo systemctl restart sshd;
+
+wget -qO - https://artifacts.elastic.co/GPG-KEY-elasticsearch | sudo apt-key add -
+sudo apt-get install apt-transport-https
+echo "deb https://artifacts.elastic.co/packages/8.x/apt stable main" | sudo tee -a /etc/apt/sources.list.d/elastic-8.x.list
+sudo apt-get update && sudo apt-get install logstash
+
+sudo nohup sudo /usr/share/logstash/bin/logstash -f /vagrant/1.conf > /vagrant/logstash.log 2>&1 &
+
+
+
+
+
+
+4. Then, I wrote /vagrant/1.conf
+
+
+# Sample Logstash configuration for creating a simple
+# Beats -> Logstash -> Elasticsearch pipeline.
+
+input {
+    file {
+        path => "/vagrant/petclinic.log"
+        start_position => beginning
+        type => "apache"
+    }
+}
+
+
+
+output {
+
+    file {
+        codec => line { format => "%{[log][file][path]},%{@version},%{message},%{@timestamp},%{[host][name]}"}
+        path => "/vagrant/petcliniclog.csv"
+    }
+}
+
+
+So when /usr/share/logstash/bin/logstash runs, it will watch /vagrant/petclinic.log for appended line, and parse them into csv format and store them into /vagrant/petcliniclog.csv. The columns are
+
+[path, version, message, timestamp, hostname]
+
+5. Finally, I ran ansible playbook on the host machine. The webserver builds petclinic.jar and output the logs into "/vagrant/petclinic.log". Then the logstash parse the log file and output the result to "/vagrant/petcliniclog.csv".
+
+The result I got is:
+
+
+
+/vagrant/nohup.out,1,,2022-05-01T18:49:47.132160Z,ansible
+/vagrant/nohup.out,1,,2022-05-01T18:49:47.168295Z,ansible
+/vagrant/nohup.out,1,              |\      _,,,--,,_,2022-05-01T18:49:47.168769Z,ansible
+/vagrant/nohup.out,1,             /,`.-'`'   ._  \-;;,_,2022-05-01T18:49:47.168976Z,ansible
+/vagrant/nohup.out,1,  _______ __|,4-  ) )_   .;.(__`'-'__     ___ __    _ ___ _______,2022-05-01T18:49:47.169141Z,ansible
+/vagrant/nohup.out,1, |       | '---''(_/._)-'(_\_)   |   |   |   |  |  | |   |       |,2022-05-01T18:49:47.169303Z,ansible
+/vagrant/nohup.out,1, |    _  |    ___|_     _|       |   |   |   |   |_| |   |       | __ _ _,2022-05-01T18:49:47.169489Z,ansible
+/vagrant/nohup.out,1, |   |_| |   |___  |   | |       |   |   |   |       |   |       | \ \ \ \,2022-05-01T18:49:47.169644Z,ansible
+/vagrant/nohup.out,1, |    ___|    ___| |   | |      _|   |___|   |  _    |   |      _|  \ \ \ \,2022-05-01T18:49:47.169796Z,ansible
+/vagrant/nohup.out,1, |   |   |   |___  |   | |     |_|       |   | | |   |   |     |_    ) ) ) ),2022-05-01T18:49:47.169978Z,ansible
+/vagrant/nohup.out,1, |___|   |_______| |___| |_______|_______|___|_|  |__|___|_______|  / / / /,2022-05-01T18:49:47.170144Z,ansible
+/vagrant/nohup.out,1, ==================================================================/_/_/_/,2022-05-01T18:49:47.170297Z,ansible
+/vagrant/nohup.out,1,,2022-05-01T18:49:47.170477Z,ansible
+/vagrant/nohup.out,1,:: Built with Spring Boot :: 2.2.2.RELEASE,2022-05-01T18:49:47.170634Z,ansible
+/vagrant/nohup.out,1,,2022-05-01T18:49:47.170786Z,ansible
+/vagrant/nohup.out,1,,2022-05-01T18:49:47.170962Z,ansible
+/vagrant/nohup.out,1,2022-05-01 18:49:46.902  INFO 45769 --- [           main] o.s.s.petclinic.PetClinicApplication     : Starting PetClinicApplication v2.2.0.BUILD-SNAPSHOT on ansible with PID 45769 (/vagrant/petclinic.jar started by vagrant in /vagrant),2022-05-01T18:49:47.171119Z,ansible
+/vagrant/nohup.out,1,2022-05-01 18:49:46.912  INFO 45769 --- [           main] o.s.s.petclinic.PetClinicApplication     : No active profile set, falling back to default profiles: default,2022-05-01T18:49:47.171271Z,ansible
+/vagrant/nohup.out,1,2022-05-01 18:49:49.739  INFO 45769 --- [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 263ms. Found 4 JPA repository interfaces.,2022-05-01T18:49:50.244125Z,ansible
+/vagrant/nohup.out,1,2022-05-01 18:49:49.457  INFO 45769 --- [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.,2022-05-01T18:49:50.243768Z,ansible
+/vagrant/nohup.out,1,2022-05-01 18:49:50.625  INFO 45769 --- [           main] trationDelegate$BeanPostProcessorChecker : Bean 'org.springframework.transaction.annotation.ProxyTransactionManagementConfiguration' of type [org.springframework.transaction.annotation.ProxyTransactionManagementConfiguration] is not eligible for getting processed by all BeanPostProcessors (for example: not eligible for auto-proxying),2022-05-01T18:49:51.339442Z,ansible
+/vagrant/nohup.out,1,2022-05-01 18:49:51.082  INFO 45769 --- [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat],2022-05-01T18:49:51.340190Z,ansible
+/vagrant/nohup.out,1,2022-05-01 18:49:51.181  INFO 45769 --- [           main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext,2022-05-01T18:49:51.340660Z,ansible
+/vagrant/nohup.out,1,2022-05-01 18:49:51.066  INFO 45769 --- [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port(s): 8080 (http),2022-05-01T18:49:51.339791Z,ansible
+/vagrant/nohup.out,1,2022-05-01 18:49:51.083  INFO 45769 --- [           main] org.apache.catalina.core.StandardEngine  : Starting Servlet engine: [Apache Tomcat/9.0.29],2022-05-01T18:49:51.340435Z,ansible
+/vagrant/nohup.out,1,2022-05-01 18:49:51.181  INFO 45769 --- [           main] o.s.web.context.ContextLoader            : Root WebApplicationContext: initialization completed in 4098 ms,2022-05-01T18:49:51.340881Z,ansible
+/vagrant/nohup.out,1,2022-05-01 18:49:51.918  INFO 45769 --- [           main] org.ehcache.jsr107.Eh107CacheManager     : Registering Ehcache MBean javax.cache:type=CacheStatistics,CacheManager=urn.X-ehcache.jsr107-default-config,Cache=vets,2022-05-01T18:49:52.484374Z,ansible
+/vagrant/nohup.out,1,2022-05-01 18:49:51.894  INFO 45769 --- [           main] org.ehcache.core.EhcacheManager          : Cache 'vets' created in EhcacheManager.,2022-05-01T18:49:52.483993Z,ansible
+/vagrant/nohup.out,1,2022-05-01 18:49:51.924  INFO 45769 --- [           main] org.ehcache.jsr107.Eh107CacheManager     : Registering Ehcache MBean javax.cache:type=CacheStatistics,CacheManager=urn.X-ehcache.jsr107-default-config,Cache=vets,2022-05-01T18:49:52.484693Z,ansible
+/vagrant/nohup.out,1,2022-05-01 18:49:51.994  INFO 45769 --- [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...,2022-05-01T18:49:52.484875Z,ansible
+/vagrant/nohup.out,1,2022-05-01 18:49:52.007  WARN 45769 --- [           main] com.zaxxer.hikari.util.DriverDataSource  : Registered driver with driverClassName=org.hsqldb.jdbcDriver was not found, trying direct instantiation.,2022-05-01T18:49:52.485039Z,ansible
+/vagrant/nohup.out,1,2022-05-01 18:49:52.526  INFO 45769 --- [           main] com.zaxxer.hikari.pool.PoolBase          : HikariPool-1 - Driver does not support get/set network timeout for connections. (feature not supported),2022-05-01T18:49:53.498612Z,ansible
+/vagrant/nohup.out,1,2022-05-01 18:49:52.529  INFO 45769 --- [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.,2022-05-01T18:49:53.499021Z,ansible
+/vagrant/nohup.out,1,2022-05-01 18:49:52.920  INFO 45769 --- [           main] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default],2022-05-01T18:49:53.499191Z,ansible
+/vagrant/nohup.out,1,2022-05-01 18:49:53.128  INFO 45769 --- [           main] org.hibernate.Version                    : HHH000412: Hibernate Core {5.4.9.Final},2022-05-01T18:49:53.499345Z,ansible
+/vagrant/nohup.out,1,2022-05-01 18:49:53.515  INFO 45769 --- [           main] o.hibernate.annotations.common.Version   : HCANN000001: Hibernate Commons Annotations {5.1.0.Final},2022-05-01T18:49:54.501133Z,ansible
+/vagrant/nohup.out,1,2022-05-01 18:49:53.891  INFO 45769 --- [           main] org.hibernate.dialect.Dialect            : HHH000400: Using dialect: org.hibernate.dialect.HSQLDialect,2022-05-01T18:49:54.501425Z,ansible
+/vagrant/nohup.out,1,2022-05-01 18:49:55.613  INFO 45769 --- [           main] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000490: Using JtaPlatform implementation: [org.hibernate.engine.transaction.jta.platform.internal.NoJtaPlatform],2022-05-01T18:49:56.504191Z,ansible
+/vagrant/nohup.out,1,2022-05-01 18:49:55.634  INFO 45769 --- [           main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default',2022-05-01T18:49:56.504554Z,ansible
+/vagrant/nohup.out,1,2022-05-01 18:49:56.614  WARN 45769 --- [           main] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning,2022-05-01T18:49:57.506153Z,ansible
+/vagrant/nohup.out,1,2022-05-01 18:49:56.995  INFO 45769 --- [           main] o.s.s.concurrent.ThreadPoolTaskExecutor  : Initializing ExecutorService 'applicationTaskExecutor',2022-05-01T18:49:57.506549Z,ansible
+/vagrant/nohup.out,1,2022-05-01 18:49:59.258  INFO 45769 --- [           main] o.apache.catalina.core.StandardService   : Stopping service [Tomcat],2022-05-01T18:49:59.540807Z,ansible
+/vagrant/nohup.out,1, java.base@11.0.15/jdk.internal.misc.Unsafe.park(Native Method),2022-05-01T18:49:59.541390Z,ansible
+/vagrant/nohup.out,1, java.base@11.0.15/java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.awaitNanos(AbstractQueuedSynchronizer.java:2123),2022-05-01T18:49:59.541834Z,ansible
+/vagrant/nohup.out,1, java.base@11.0.15/java.util.concurrent.ScheduledThreadPoolExecutor$DelayedWorkQueue.take(ScheduledThreadPoolExecutor.java:899),2022-05-01T18:49:59.542528Z,ansible
+/vagrant/nohup.out,1, java.base@11.0.15/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1114),2022-05-01T18:49:59.544018Z,ansible
+/vagrant/nohup.out,1, java.base@11.0.15/java.lang.Thread.run(Thread.java:829),2022-05-01T18:49:59.544360Z,ansible
+/vagrant/nohup.out,1,,2022-05-01T18:49:59.544671Z,ansible
+/vagrant/nohup.out,1,2022-05-01 18:49:59.472 ERROR 45769 --- [           main] o.s.b.d.LoggingFailureAnalysisReporter   : ,2022-05-01T18:49:59.545012Z,ansible
+/vagrant/nohup.out,1,***************************,2022-05-01T18:49:59.545338Z,ansible
+/vagrant/nohup.out,1,***************************,2022-05-01T18:49:59.545636Z,ansible
+/vagrant/nohup.out,1,Description:,2022-05-01T18:49:59.545956Z,ansible
+/vagrant/nohup.out,1,Web server failed to start. Port 8080 was already in use.,2022-05-01T18:49:59.546273Z,ansible
+/vagrant/nohup.out,1,Action:,2022-05-01T18:49:59.546595Z,ansible
+/vagrant/nohup.out,1,Identify and stop the process that's listening on port 8080 or configure this application to listen on another port.,2022-05-01T18:49:59.546960Z,ansible
+/vagrant/nohup.out,1,2022-05-01 18:49:59.475  INFO 45769 --- [           main] o.s.s.concurrent.ThreadPoolTaskExecutor  : Shutting down ExecutorService 'applicationTaskExecutor',2022-05-01T18:49:59.547343Z,ansible
+/vagrant/nohup.out,1,2022-05-01 18:49:59.488  INFO 45769 --- [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown initiated...,2022-05-01T18:49:59.547667Z,ansible
+/vagrant/nohup.out,1,2022-05-01 18:49:59.506  INFO 45769 --- [           main] org.ehcache.core.EhcacheManager          : Cache 'vets' removed from EhcacheManager.,2022-05-01T18:49:59.548057Z,ansible
+/vagrant/nohup.out,1,2022-05-01 18:49:59.201  INFO 45769 --- [           main] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 13 endpoint(s) beneath base path '/manage',2022-05-01T18:49:59.540493Z,ansible
+/vagrant/nohup.out,1,2022-05-01 18:49:59.262  WARN 45769 --- [           main] o.a.c.loader.WebappClassLoaderBase       : The web application [ROOT] appears to have started a thread named [HikariPool-1 housekeeper] but has failed to stop it. This is very likely to create a memory leak. Stack trace of thread:,2022-05-01T18:49:59.541140Z,ansible
+/vagrant/nohup.out,1, java.base@11.0.15/java.util.concurrent.locks.LockSupport.parkNanos(LockSupport.java:234),2022-05-01T18:49:59.541606Z,ansible
+/vagrant/nohup.out,1, java.base@11.0.15/java.util.concurrent.ScheduledThreadPoolExecutor$DelayedWorkQueue.take(ScheduledThreadPoolExecutor.java:1182),2022-05-01T18:49:59.542046Z,ansible
+/vagrant/nohup.out,1, java.base@11.0.15/java.util.concurrent.ThreadPoolExecutor.getTask(ThreadPoolExecutor.java:1054),2022-05-01T18:49:59.543742Z,ansible
+/vagrant/nohup.out,1, java.base@11.0.15/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628),2022-05-01T18:49:59.544196Z,ansible
+/vagrant/nohup.out,1,2022-05-01 18:49:59.468  INFO 45769 --- [           main] ConditionEvaluationReportLoggingListener : ,2022-05-01T18:49:59.544513Z,ansible
+/vagrant/nohup.out,1,Error starting ApplicationContext. To display the conditions report re-run your application with 'debug' enabled.,2022-05-01T18:49:59.544832Z,ansible
+/vagrant/nohup.out,1,,2022-05-01T18:49:59.545185Z,ansible
+/vagrant/nohup.out,1,APPLICATION FAILED TO START,2022-05-01T18:49:59.545481Z,ansible
+/vagrant/nohup.out,1,,2022-05-01T18:49:59.545804Z,ansible
+/vagrant/nohup.out,1,,2022-05-01T18:49:59.546102Z,ansible
+/vagrant/nohup.out,1,,2022-05-01T18:49:59.546431Z,ansible
+/vagrant/nohup.out,1,,2022-05-01T18:49:59.546793Z,ansible
+/vagrant/nohup.out,1,,2022-05-01T18:49:59.547155Z,ansible
+/vagrant/nohup.out,1,2022-05-01 18:49:59.476  INFO 45769 --- [           main] j.LocalContainerEntityManagerFactoryBean : Closing JPA EntityManagerFactory for persistence unit 'default',2022-05-01T18:49:59.547504Z,ansible
+/vagrant/nohup.out,1,2022-05-01 18:49:59.503  INFO 45769 --- [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown completed.,2022-05-01T18:49:59.547857Z,ansible
+
+
+
+6. This can also be easily automated. Please see readme.txt in automation folder. This can basically be 100% automated.
+
+
+
+
+
+
+
